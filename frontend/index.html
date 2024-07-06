@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Парсер</title>
+</head>
+<body>
+    <h2>Парсер вакансий</h2>
+
+    <div>
+        <p>
+            Поиск:<br/>
+            <input id="keyword" />
+        </p>
+
+        <p>График работы:</p>
+        <select id="graphic">
+            <option value></option>
+            <option value ="fullDay">Полный день</option>
+            <option value ="shift">Сменный график</option>
+            <option value ="flexible">Гибкий график</option>
+            <option value ="remote">Удаленная работа</option>
+            <option value ="flyInFlyOut">Вахтовый метод</option>
+        </select>
+
+        <p>Опыт работы:</p>
+        <select id="experience">
+            <option value></option>
+            <option value ="noExperience">Нет опыта</option>
+            <option value ="between1And3">От 1 года до 3 лет</option>
+            <option value ="between3And6">От 3 до 6 лет</option>
+            <option value ="moreThan6">Более 6 лет</option>
+        </select>
+        <p>Тип занятости:</p>
+        <select id="emp">
+            <option value></option>
+            <option value ="full">Полная занятость</option>
+            <option value ="part">Частичная занятость</option>
+            <option value ="project">Проектная работа</option>
+            <option value ="volunteer">Волонтерство</option>
+            <option value ="probation">Стажировка</option>
+        </select>
+        <p>Область поиска:</p>
+        <select id="field">
+            <option value></option>
+            <option value ="name">в названии вакансии</option>
+
+            <option value ="description">в описании вакансии</option>
+        </select>
+        <p>
+            Число вакансий на странице:<br/>
+            <input id="page" />
+        </p>
+         <p>
+            <button id="search">Искать</button>
+        </p>
+    </div>
+
+    <table>
+        <thead><tr><th>ID</th><th>Название вакансии</th><th>График</th><th>Опыт</th><th>Тип занятости</th><th>Ссылка</th><th>Компания</th><th></th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        async function getUsers() {
+            const response = await fetch("/api/users", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const users = await response.json();
+                const rows = document.querySelector("tbody");
+                users.forEach(user => rows.append(row(user)));
+            }
+        }
+
+
+        async function createUser(keyword, graphic, experience, emp, field, page) {
+
+            const response = await fetch("api/users", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    keyword: keyword,
+                    graphic: graphic,
+                    experience: experience,
+                    emp: emp,
+                    field: field,
+                    page: parseInt(page, 10),
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.querySelector("tbody").append(row(user));
+            }
+            else {
+                const error = await response.json();
+                console.log(error.message);
+            }
+        }
+
+
+
+        function row(user) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", user.id);
+
+            const id = document.createElement("td");
+            id.append(user.id);
+            tr.append(id);
+
+            const title = document.createElement("td");
+            title.append(user.title);
+            tr.append(title);
+
+            const graphic = document.createElement("td");
+            graphic.append(user.graphic);
+            tr.append(graphic);
+
+            const experience = document.createElement("td");
+            experience.append(user.experience);
+            tr.append(experience);
+
+            const emp = document.createElement("td");
+            emp.append(user.emp);
+            tr.append(emp);
+
+            const company = document.createElement("td");
+            company.append(user.company);
+            tr.append(company);
+
+            const URL = document.createElement("td");
+            URL.append(user.URL);
+            tr.append(URL);
+
+            const linksTd = document.createElement("td");
+
+
+
+            return tr;
+        }
+
+        document.getElementById("search").addEventListener("click", async () => {
+
+            const keyword = document.getElementById("keyword").value;
+            const graphic = document.getElementById("graphic").value;
+            const experience = document.getElementById("experience").value;
+            const emp = document.getElementById("emp").value;
+            const field = document.getElementById("field").value;
+            const page = document.getElementById("page").value;
+            await createUser(keyword,graphic,experience,emp,field,page);
+            reset();
+        });
+
+        getUsers();
+    </script>
+</body>
